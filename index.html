@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Leitor de QR Criptografado</title>
+  <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+</head>
+<body>
+  <h2>Descriptografar QR Code</h2>
+  <label>Conteúdo do QR:</label><br>
+  <textarea id="encrypted" rows="6" cols="60" placeholder="Cole aqui o conteúdo do QR"></textarea><br><br>
+
+  <label>Senha:</label><br>
+  <input type="password" id="password"><br><br>
+
+  <button onclick="decrypt()">Descriptografar</button>
+
+  <h3>Resultado:</h3>
+  <pre id="output"></pre>
+
+  <script>
+    function decrypt() {
+      const encrypted = document.getElementById('encrypted').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!encrypted || !password) {
+        alert("Preencha todos os campos!");
+        return;
+      }
+
+      try {
+        const key = CryptoJS.SHA256(password);
+        const decrypted = CryptoJS.AES.decrypt(encrypted, key, {
+          mode: CryptoJS.mode.ECB,
+          padding: CryptoJS.pad.Pkcs7
+        });
+        const text = decrypted.toString(CryptoJS.enc.Utf8);
+        document.getElementById('output').textContent = text || "Senha incorreta ou conteúdo inválido.";
+      } catch (e) {
+        document.getElementById('output').textContent = "Erro ao descriptografar.";
+      }
+    }
+  </script>
+</body>
+</html>

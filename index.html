@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Leitor de QR Code Criptografado</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+    #reader {
+      width: 300px;
+      margin: 0 auto;
+    }
+    #output {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #e1e1e1;
+      border-radius: 5px;
+      word-wrap: break-word;
+      max-width: 90%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    input[type="password"], button {
+      padding: 10px;
+      margin-top: 10px;
+    }
+  </style>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+</head>
+<body>
+
+  <h1>Leitor de QR Criptografado</h1>
+  <div id="reader"></div>
+  
+  <input type="password" id="password" placeholder="Digite a senha" value="saudeti2025" />
+  <button onclick="descriptografarQRCode()">Descriptografar</button>
+
+  <div id="output">Aguardando leitura do QR Code...</div>
+
+  <script>
+    let ultimoQRCode = "";
+
+    function descriptografarQRCode() {
+      const senha = document.getElementById("password").value;
+      if (!ultimoQRCode) {
+        document.getElementById("output").innerText = "Nenhum QR code foi lido ainda.";
+        return;
+      }
+
+      try {
+        const key = CryptoJS.enc.Utf8.parse(senha.padEnd(16, '\0'));
+        const decrypted = CryptoJS.AES.decrypt(ultimoQRCode, key, {
+          mode: CryptoJS.mode.ECB,
+          padding: CryptoJS.pad.Pkcs7
+        });
+        const texto = decrypted.toString(CryptoJS.enc.Utf8);
+
+        if (!texto) throw new Error("Erro na descriptografia");
+
+        document.getElementById("output").innerText = texto;
+      } catch (e) {
+        document.getElementById("output").innerText = "Erro: conteúdo não pode ser lido. Verifique a senha.";
+      }
+    }
+
+    function onScanSuccess(decodedText) {
+      ultimoQRCode = decodedText;
+      document.getElementById("output").innerText = "QR Code lido! Agora digite a senha para descriptografar.";
+    }
+
+    const html5QrCode = new Html5Qrcode("reader");
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: 250 },
+          onScanSuccess
+        );
+      }
+    });
+  </script>
+</body>
+</html>
